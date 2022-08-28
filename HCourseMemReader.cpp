@@ -6,27 +6,25 @@
 
 using namespace std;
 
-BOOL bProcMagic(DWORD dID, uintptr_t dMem, int iType)
+void errCatcher(int returnValue)
 {
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dID); //Get handle to the process
-	if (hProcess == NULL)
+	if (returnValue == NULL)
 	{
 		cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
 		getchar();
-		return 1;
+		exit(1);
 	}
+}
+
+BOOL bProcRead(HANDLE hProcess, DWORD dID, uintptr_t dMem, int iType)
+{
 	switch (iType)
 	{
 	case 1: //bool
 	{
 		bool boolRead;
 		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &boolRead, sizeof(bool), NULL);
-		if (rpmReturn == FALSE)
-		{
-			cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
-			getchar();
-			return 1;
-		}
+		errCatcher((int)rpmReturn);
 		cout << "boolRead = " << boolRead << endl;
 		break;
 	}
@@ -34,69 +32,55 @@ BOOL bProcMagic(DWORD dID, uintptr_t dMem, int iType)
 	{
 		int intRead;
 		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &intRead, sizeof(int), NULL);
-		if (rpmReturn == FALSE)
-		{
-			cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
-			getchar();
-			return 1;
-		}
+		errCatcher((int)rpmReturn);
 		cout << "intRead = " << dec << intRead << endl;
 		break;
 	}
 	case 3: //char
 	{
-		char charRead;
-		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &charRead, sizeof(char), NULL);
-		if (rpmReturn == FALSE)
-		{
-			cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
-			getchar();
-			return 1;
-		}
+		char charRead[500];
+		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &charRead, 500, NULL);
+		errCatcher((int)rpmReturn);
 		cout << "charRead = " << charRead << endl;
 		break;
 	}
 	case 4: //string 
 	{
-		string strRead; //Really problems with strings reading. Need to fix
-		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &strRead, sizeof(string), NULL);
-		if (rpmReturn == FALSE)
-		{
-			cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
-			getchar();
-			return 1;
-		}
-		cout << "strRead = " << strRead << endl; //smth wrong with buffer.
+		char strRead[500];
+		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &strRead, 500, NULL);
+		errCatcher((int)rpmReturn);
+		cout << "strRead = " << strRead << endl;
 		break;
 	}
 	case 5: //intpointer(x86)
 	{
-		int* pointerRead;
-		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &pointerRead, sizeof(4), NULL);
-		if (rpmReturn == FALSE)
-		{
-			cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
-			getchar();
-			return 1;
-		}
+		int* pointerRead = NULL;
+		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &pointerRead, sizeof(int*), NULL);
+		errCatcher((int)rpmReturn);
 		cout << "pointerRead = " << pointerRead << endl;
+
+		int intRead;
+		rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)pointerRead, &intRead, sizeof(int), NULL);
+		errCatcher((int)rpmReturn);
+		cout << "intRead = " << intRead << endl;
 		break;
 	}
 	case 6: //inpointer(x64)
 	{
-		int* pointerRead;
-		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &pointerRead, sizeof(8), NULL);
-		if (rpmReturn == FALSE)
-		{
-			cout << "Something gone wrong. Try the magic again. Err = " << dec << GetLastError() << endl;
-			getchar();
-			return 1;
-		}
+		int* pointerRead = NULL;
+		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &pointerRead, sizeof(int*), NULL);
+		errCatcher((int)rpmReturn);
 		cout << "pointerRead = " << pointerRead << endl;
+
+		int intRead;
+		rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)pointerRead, &intRead, sizeof(int), NULL);
+		errCatcher((int)rpmReturn);
+		cout << "intRead = " << intRead << endl;
 		break;
 	}
 	}
 	CloseHandle(hProcess);
+	return TRUE;
 
 };
 
@@ -105,19 +89,24 @@ int main()
 	//inputs like ProcessID, Mem.
 	DWORD inputID;
 	uintptr_t inputMem = 0x0;
-	int inputType;
 
+	//Read Memory process section
 	cout << "Input Process ID" << endl << flush;
 	cin >> inputID;
 	cout << "Input Mem address" << endl << flush;
 	cin >> hex >> inputMem;
+	int inputType;
+
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, inputID); //Get handle to the process
+	errCatcher((int)hProcess);
+
 	do
 	{
 		cout << "Input type of the variable 1-bool 2-int 3-char 4-string(broken) 5-intpointer(x86) 6-intpointer(x64)" << endl << flush;
 		cin >> dec >> inputType;
-	} while (inputType < 0 && inputType > 7);
-	
-	bProcMagic(inputID, inputMem, inputType);
+	} while (inputType < 0 || inputType > 7);
+	bProcRead(hProcess, inputID, inputMem, inputType);
+
 	cout << "Press ENTER to quit.";
 	system("pause > nul");
 	return 0;
