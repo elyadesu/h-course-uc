@@ -19,13 +19,14 @@ int main()
 	int* ptr2ptr2ptr = ptr2ptr;
 
 	do {
-		cout << "Process ID:  " << GetCurrentProcessId() << endl << endl;
-		cout << "varInt  " << &varInt << " = " << varInt << endl;
-		cout << "varString  " << &varString << " = " << varString << endl;
-		cout << "arrChar  " << &arrChar << " = " << arrChar << endl << endl;
-		cout << "ptr2int  " << &ptr2int << " = " << ptr2int << endl;
-		cout << "ptr2ptr  " << &ptr2ptr << " = " << ptr2ptr << endl;
-		cout << "ptr2ptr2ptr  " << &ptr2ptr2ptr << " = " << ptr2ptr2ptr << endl << endl;
+		cout << "Process ID:  " << dec << GetCurrentProcessId() << endl << endl;
+		cout << "varInt  " << hex << (uintptr_t)&varInt << " = " << dec << varInt << endl;
+		cout << "varString  " << hex << (uintptr_t)&varString << " = " << varString << endl;
+		cout << "arrChar  " << hex << (uintptr_t)&arrChar << " = " << arrChar << endl;
+		cout << "bool end  " << hex << (uintptr_t)&end << " = " << end << endl << endl;
+		cout << "ptr2int  " << hex << (uintptr_t)&ptr2int << " = " << ptr2int << endl;
+		cout << "ptr2ptr  " << hex << (uintptr_t)&ptr2ptr << " = " << ptr2ptr << endl;
+		cout << "ptr2ptr2ptr  " << hex << (uintptr_t)&ptr2ptr2ptr << " = " << ptr2ptr2ptr << endl << endl;
 		cout << "Press Enter to Print again.  " << endl;
 		getchar();
 		cout << "-------------------------------------------------------------" << endl;
