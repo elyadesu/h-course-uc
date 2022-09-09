@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Windows.h>
 
+
 using namespace std;
 
 void errCatcher(int returnValue)
@@ -79,7 +80,83 @@ BOOL bProcRead(HANDLE hProcess, DWORD dID, uintptr_t dMem, int iType)
 		break;
 	}
 	}
-	CloseHandle(hProcess);
+	return TRUE;
+
+};
+
+BOOL bProcWrite(HANDLE hProcess, DWORD dID, uintptr_t dMem, int iType)
+{
+	switch (iType)
+	{
+	case 1: //bool
+	{
+		bool bWrite;
+		cout << "Input new value [true/false]" << endl << flush;
+		do
+		{
+			cin >> boolalpha >> bWrite;
+
+		} while (bWrite != true && bWrite != false);
+		BOOL rpmReturn = WriteProcessMemory(hProcess, (LPVOID)dMem, &bWrite, sizeof(bool), NULL); 
+		errCatcher((int)rpmReturn);
+		break;
+	}
+	case 2: //int
+	{
+		int intWrite;
+		cout << "Input new value of int: " << endl << flush;
+		cin >> dec >> intWrite;
+		BOOL rpmReturn = WriteProcessMemory(hProcess, (LPVOID)dMem, &intWrite, sizeof(int), NULL); 
+		errCatcher((int)rpmReturn);
+		break;
+	}
+	case 3: //char
+	{
+		char charWrite[500];
+		cout << "Input new value of char: " << endl;
+		cin.ignore();
+		cin.getline(charWrite, sizeof(charWrite));
+		BOOL rpmReturn = WriteProcessMemory(hProcess, (LPVOID)dMem, &charWrite, sizeof(charWrite), NULL); 
+		errCatcher((int)rpmReturn);
+		break;
+	}
+	case 4: //string 
+	{
+		char strWrite[500];
+		cout << "Input new value of char: " << endl;
+		cin.ignore();
+		cin.getline(strWrite, sizeof(strWrite));
+		BOOL rpmReturn = WriteProcessMemory(hProcess, (LPVOID)dMem, &strWrite, strlen(strWrite) + 1, NULL);
+		errCatcher((int)rpmReturn);
+		break;
+	}
+	/* UNDER CONSTRUCTION
+	case 5: //intpointer(x86)
+	{
+		int* pointerRead = NULL;
+		int MemAddress;
+		cout << "Input new memory for the pointer: " << endl;
+		cin >> hex >> MemAddress;
+		pointerRead = &MemAddress;
+		BOOL rpmReturn = WriteProcessMemory(hProcess, (LPVOID)dMem, &pointerRead, sizeof(int*), NULL);
+		errCatcher((int)rpmReturn);
+		break;
+	}
+	case 6: //inpointer(x64)
+	{
+		int* pointerRead = NULL;
+		BOOL rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)dMem, &pointerRead, sizeof(int*), NULL);
+		errCatcher((int)rpmReturn);
+		cout << "pointerRead = " << pointerRead << endl;
+
+		int intRead;
+		rpmReturn = ReadProcessMemory(hProcess, (LPCVOID)pointerRead, &intRead, sizeof(int), NULL);
+		errCatcher((int)rpmReturn);
+		cout << "intRead = " << intRead << endl;
+		break;
+	}
+	*/
+	}
 	return TRUE;
 
 };
@@ -104,9 +181,26 @@ int main()
 	{
 		cout << "Input type of the variable 1-bool 2-int 3-char 4-string(broken) 5-intpointer(x86) 6-intpointer(x64)" << endl << flush;
 		cin >> dec >> inputType;
-	} while (inputType < 0 || inputType > 7);
+	} while (inputType < 0 || inputType > 6);
 	bProcRead(hProcess, inputID, inputMem, inputType);
 
+	//Write Memory process section
+	char inputWriteQ;
+	do
+	{
+		cout << "Would you like to write memory of this value [Y/N]?"<< endl << flush;
+		cin >> inputWriteQ;
+		inputWriteQ = toupper(inputWriteQ);
+	} while ((inputWriteQ != 'Y') && (inputWriteQ != 'N'));
+	if (toupper(inputWriteQ) == 'Y')
+	{
+		if (inputType < 5)
+			bProcWrite(hProcess, inputID, inputMem, inputType); //cos having some difficulties with writtening new address (Under construction section)
+		else
+			cout << "Having some difficulties with writtening new address (Under construction section)" << endl << flush;
+	}
+		
+	CloseHandle(hProcess);
 	cout << "Press ENTER to quit.";
 	system("pause > nul");
 	return 0;
